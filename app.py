@@ -679,7 +679,7 @@ def update_role(user_email):
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     if request.method == 'GET':
-        return render_template('main.html')
+        return render_template('chat.html')
     elif request.method == 'POST':
         user_input = request.form['user_input']
         response = gemini_chat(user_input)  # Call gemini_chat function here
@@ -751,6 +751,42 @@ def image_analysis():
             analysis = response.text
     return render_template('image_analysis.html', analysis=analysis)
 
+import json
+from pathlib import Path
+from datetime import datetime
+
+RATINGS_FILE = Path('instance/rating/ratings.json')
+
+def load_ratings():
+    if RATINGS_FILE.exists():
+        with open(RATINGS_FILE, 'r') as f:
+            return json.load(f)
+    return {"ratings": []}
+
+def save_ratings(ratings_data):
+    RATINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(RATINGS_FILE, 'w') as f:
+        json.dump(ratings_data, f, indent=4)
+
+@app.route('/save_rating', methods=['POST'])
+def save_rating():
+    data = request.json
+    ratings_data = load_ratings()
+    
+    # Find user's existing ratings
+    user_ratings = [r for r in ratings_data["ratings"] if r["user_name"] == data["user_name"]]
+    
+    new_rating = {
+        "n": len(user_ratings) + 1,
+        "user_name": data["user_name"],
+        "Wellness-rating": data["rating"],
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    ratings_data["ratings"].append(new_rating)
+    save_ratings(ratings_data)
+    
+    return jsonify({"success": True, "rating_number": new_rating["n"]})
 
 from fer import FER
 # # Initialize emotion detection model
@@ -998,21 +1034,60 @@ def update_appointment_stats(username, action, date):
 def update_appointment(appointment_id):
     if session.get('role') != 'doctor':
         return jsonify({'error': 'Unauthorized'}), 401
-        
-    appointments_file = 'instance/appointments.json'
     
-    with open(appointments_file, 'r') as f:
-        appointments = json.load(f)
+    # Add meet link when doctor accepts
+    meet_link = "https://meet.google.com/iao-drda-vtc" if request.json['status'] == 'accepted' else None
     
-    for appointment in appointments:
-        if appointment['id'] == appointment_id:
-            appointment['status'] = request.json['status']
-            break
+    # Get the patient's username from the appointment
+    appointments_dir = 'instance/appointments'
+    appointment_found = False
     
-    with open(appointments_file, 'w') as f:
-        json.dump(appointments, f, indent=4)
-        
-    return jsonify({'success': True})
+    for filename in os.listdir(appointments_dir):
+        if not filename.endswith('.json'):
+            continue
+            
+        file_path = os.path.join(appointments_dir, filename)
+        with open(file_path, 'r') as f:
+            appointments = json.load(f)
+            
+        for appointment in appointments:
+            if appointment['id'] == appointment_id:
+                appointment_found = True
+                appointment['status'] = request.json['status']
+                appointment['meet_link'] = meet_link
+                
+                # Save updated appointments
+                with open(file_path, 'w') as f:
+                    json.dump(appointments, f, indent=4)
+                
+                # Store in doctor's appointments
+                doctor_username = session.get('username')
+                os.makedirs('instance/doctor_appointments', exist_ok=True)
+                doctor_file = f'instance/doctor_appointments/{doctor_username}.json'
+                
+                try:
+                    with open(doctor_file, 'r') as f:
+                        doctor_appointments = json.load(f)
+                except FileNotFoundError:
+                    doctor_appointments = []
+                
+                doctor_appointments.append({
+                    'appointment_id': appointment_id,
+                    'patient': filename[:-5],
+                    'date': appointment['date'],
+                    'slot': appointment['slot'],
+                    'status': request.json['status'],
+                    'patient_info': get_user_basic_info(filename[:-5]),
+                    'updated_at': datetime.now().isoformat()
+                })
+                
+                with open(doctor_file, 'w') as f:
+                    json.dump(doctor_appointments, f, indent=4)
+                    
+                return jsonify({'success': True})
+    
+    if not appointment_found:
+        return jsonify({'error': 'Appointment not found'}), 404
 
 
 
@@ -1035,23 +1110,27 @@ def get_user_appointment_stats(username):
     
     return stats
 
-def update_user_rating(username):
+def calculate_patient_rating(username):
     stats = get_user_appointment_stats(username)
-    monthly_cancel_rate = stats['total_cancellations'] / max(stats['total_appointments'], 1)
+    monthly_appointments = stats['monthly_stats'].get(str(datetime.now().month), {})
     
-    if monthly_cancel_rate < 0.1:
-        rating = 'blue'  # genuine patient
-    elif monthly_cancel_rate > 0.4:
-        rating = 'red'   # frequent canceller
-    else:
-        rating = 'white' # normal patient
+    if not monthly_appointments:
+        return 'white'
         
-    stats['rating'] = rating
+    total = monthly_appointments.get('booked', 0)
+    cancelled = monthly_appointments.get('cancelled', 0)
     
-    with open(f'instance/appointment_stats/{username}.json', 'w') as f:
-        json.dump(stats, f, indent=4)
+    if total == 0:
+        return 'white'
+        
+    cancel_rate = cancelled / total
     
-    return rating
+    if cancel_rate < 0.1:
+        return 'blue'
+    elif cancel_rate > 0.4:
+        return 'red'
+    return 'white'
+
 
 
 @app.route('/api/appointments/cancel/<int:appointment_id>', methods=['POST'])
@@ -1115,6 +1194,143 @@ def get_all_appointments():
 def get_user_stats():
     username = session.get('username')
     return jsonify(get_user_appointment_stats(username))
+
+
+# Constants for time slots
+AVAILABLE_SLOTS = [
+    '10:00-11:00',
+    '12:00-13:00',
+    '15:00-16:00',
+    '17:00-18:00'
+]
+
+@app.route('/api/available-slots', methods=['GET'])
+@login_required
+def get_available_slots():
+    return jsonify(AVAILABLE_SLOTS)
+
+
+@app.route('/api/doctor/patient-info/<username>', methods=['GET'])
+@login_required
+def get_patient_info(username):
+    if session.get('role') != 'doctor':
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    patient_info = {
+        'basic_info': get_user_basic_info(username),
+        'appointment_history': get_appointment_history(username),
+        'mood_history': get_mood_history(username),
+        'questionnaire_responses': get_questionnaire_responses(username)
+    }
+    
+    return jsonify(patient_info)
+
+
+
+def check_appointment_limits(username, appointment_date):
+    appointments_file = f'instance/appointments/{username}.json'
+    
+    try:
+        with open(appointments_file, 'r') as f:
+            appointments = json.load(f)
+    except FileNotFoundError:
+        return True, None
+        
+    # Weekly limit check
+    week_start = appointment_date - timedelta(days=appointment_date.weekday())
+    week_end = week_start + timedelta(days=6)
+    week_appointments = [a for a in appointments 
+                        if week_start <= datetime.strptime(a['date'], '%Y-%m-%d') <= week_end
+                        and a['status'] != 'cancelled']
+    
+    if len(week_appointments) >= 1:
+        return False, "Weekly limit reached (maximum 1 appointment per week)"
+        
+    # Monthly limit check
+    month_start = appointment_date.replace(day=1)
+    month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    month_appointments = [a for a in appointments 
+                         if month_start <= datetime.strptime(a['date'], '%Y-%m-%d') <= month_end
+                         and a['status'] != 'cancelled']
+    
+    if len(month_appointments) >= 4:
+        return False, "Monthly limit reached (maximum 4 appointments per month)"
+        
+    return True, None
+   
+def save_appointment(username, appointment_data):
+    os.makedirs('instance/appointments', exist_ok=True)
+    file_path = f'instance/appointments/{username}.json'
+    
+    try:
+        with open(file_path, 'r') as f:
+            appointments = json.load(f)
+    except FileNotFoundError:
+        appointments = []
+        
+    appointments.append(appointment_data)
+    
+    with open(file_path, 'w') as f:
+        json.dump(appointments, f, indent=4)
+
+
+
+
+def get_user_basic_info(username):
+    """Get basic user information from user data file"""
+    try:
+        with open(f'instance/user_data/{username}.json', 'r') as f:
+            user_data = json.load(f)
+        return user_data
+    except FileNotFoundError:
+        return {
+            'age': 'Unknown',
+            'gender': 'Unknown',
+            'occupation': 'Unknown'
+        }
+
+def get_appointment_history(username):
+    """Get user's appointment history"""
+    try:
+        with open(f'instance/appointments/{username}.json', 'r') as f:
+            appointments = json.load(f)
+        return appointments
+    except FileNotFoundError:
+        return []
+
+def get_mood_history(username):
+    """Get user's mood tracking history"""
+    try:
+        with open(f'instance/mood_data/{username}_moods.json', 'r') as f:
+            moods = json.load(f)
+        return moods
+    except FileNotFoundError:
+        return []
+
+def get_questionnaire_responses(username):
+    """Get user's questionnaire responses"""
+    responses = {
+        'close_ended': [],
+        'open_ended': []
+    }
+    
+    # Get close-ended responses
+    try:
+        with open(f'responses/close_ended/{username}.csv', 'r') as f:
+            reader = csv.DictReader(f)
+            responses['close_ended'] = list(reader)
+    except FileNotFoundError:
+        pass
+        
+    # Get open-ended responses
+    try:
+        with open(f'responses/open_ended/{username}.csv', 'r') as f:
+            reader = csv.DictReader(f)
+            responses['open_ended'] = list(reader)
+    except FileNotFoundError:
+        pass
+        
+    return responses
 
 
 if __name__ == "__main__":

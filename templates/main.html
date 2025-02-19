@@ -5,154 +5,406 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"> <!-- Poppins font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #84e0ff 0%, #f59eff 100%);
-            color: #333;
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --gradient-primary: linear-gradient(135deg, #a8e0ff 0%, #ffd1dc 100%);
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
+        /* Navbar Styles */
         .navbar {
-            background-color: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-soft);
+            padding: 15px 0;
+            transition: all 0.3s ease;
         }
 
-        .navbar-nav .nav-link {
-            font-weight: 600;
-            color: #2d9cd4 !important;
+        .navbar-brand img.logo {
+            height: 40px;
         }
 
-        .navbar-nav .nav-link:hover {
-            color: #f59eff !important;
+        .navbar-nav {
+            gap: 10px;
         }
 
-        .chat-box {
-            background: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 10px;
-            max-height: 400px;
-            overflow-y: auto;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .nav-item {
+            position: relative;
         }
 
-        .textarea {
+        .nav-link {
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-top: 10px;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
         }
 
-        #user_input {
-            width: 75%;
-            padding: 10px;
-            border-radius: 25px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+        .nav-link:hover {
+            background: var(--gradient-primary);
+            color: var(--text-dark);
+            transform: translateY(-2px);
         }
 
-        #send_button {
-            width: 10%;
-            padding: 10px;
+        .nav-link i {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .user-section {
+            gap: 15px;
+        }
+
+        .welcome-text {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .btn-login,
+        .btn-logout {
+            padding: 8px 20px;
             border-radius: 25px;
-            border: 1px solid #2d9cd4;
-            background-color: #2d9cd4;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login {
+            background: var(--primary-color);
             color: white;
-            cursor: pointer;
         }
 
-        #send_button:hover {
-            background-color: #f59eff;
+        .btn-logout {
+            background: var(--accent-color);
+            color: white;
         }
 
-        footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            padding: 20px;
-            background: #fff;
-            border-top: 1px solid #ddd;
+        .btn-login:hover,
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-soft);
         }
 
-        footer img {
-            height: 50px;
-            margin-right: 10px;
+        /* Responsive Adjustments */
+        @media (max-width: 991px) {
+            .navbar-nav {
+                padding: 20px 0;
+            }
+
+            .nav-link {
+                padding: 10px 15px;
+            }
+
+            .user-section {
+                margin-top: 15px;
+                justify-content: center;
+            }
         }
 
-        footer span {
-            color: #777;
+        body {
+            font-family: 'Lora', serif;
+            background: linear-gradient(135deg, #a8e0ff 0%, #ffd1dc 100%);
+            color: #2c3e50;
+            line-height: 1.6;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-attachment: fixed;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.5s ease;
         }
 
-        .message {
-            padding: 10px;
-            margin-bottom: 10px;
+
+        /* Main Container Styles */
+        .container {
+            max-width: 1000px;
+            margin: 100px auto 50px;
+            padding: 2rem;
+        }
+
+        /* Chat Header Styles */
+        .chat-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .chat-header h2 {
+            font-family: 'Lora', serif;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .subtitle {
+            font-family: 'Poppins', sans-serif;
+            color: #5a6c7d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease 0.2s;
+        }
+
+        /* Chat Box Styles */
+        .chat-box {
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            max-width: 70%;
-            font-size: 16px;
-            line-height: 1.4;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #a8e0ff #fff;
+        }
+
+        .chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #a8e0ff;
+            border-radius: 10px;
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 15px;
+            max-width: 80%;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            line-height: 1.5;
+            animation: messageSlide 0.3s ease;
         }
 
         .user-message {
-            background-color: #2d9cd4;
-            color: #fff;
+            background: var(--gradient-primary);
+            color: #2c3e50;
             margin-left: auto;
-            margin-right: 10px;
+            box-shadow: 0 4px 15px rgba(168, 224, 255, 0.2);
         }
 
         .bot-message {
-            background-color: #f59eff;
-            color: #333;
-            margin-left: 10px;
+            background: #fff;
+            color: #2c3e50;
             margin-right: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Input Area Styles */
+        .textarea {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.8s ease;
+        }
+
+        #user_input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 25px;
+            border: 2px solid rgba(168, 224, 255, 0.3);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        #user_input:focus {
+            outline: none;
+            border-color: #a8e0ff;
+            box-shadow: 0 0 15px rgba(168, 224, 255, 0.3);
+        }
+
+        #send_button {
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            border: none;
+            background: var(--gradient-primary);
+            color: #2c3e50;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #send_button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 224, 255, 0.4);
+        }
+
+        /* Footer Styles */
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        footer img {
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        footer span {
+            color: #5a6c7d;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                margin-top: 80px;
+            }
+
+            .chat-header h2 {
+                font-size: 2rem;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .textarea {
+                flex-direction: column;
+            }
+
+            #send_button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <img src="static/chikitsa.png" alt="CHIKITSA Logo" style="height: 55px; width: auto;">
-            </a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
+                <img src="static/chikitsa.png" alt="CHIKITSA Logo" class="logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('chat') }}">Chat with me? 😊</a>
+                        <a class="nav-link" href="{{ url_for('chat') }}">
+                            <i class="fas fa-comments"></i>
+                            <span>Consultation</span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('login') }}">Login 🔑</a>
+                        <a class="nav-link" href="{{ url_for('talk_to_me') }}">
+                            <i class="fas fa-microphone"></i>
+                            <span>Voice Support</span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('talk_to_me') }}">Talk to me? 🗣️</a>
+                        <a class="nav-link" href="{{ url_for('image_analysis') }}">
+                            <i class="fas fa-image"></i>
+                            <span>Image analysis</span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('image_analysis') }}">Image analysis 📸</a>
+                        <a class="nav-link" href="/closed_ended">
+                            <i class="fas fa-star"></i>
+                            <span>Wellness Path</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mood_tracker') }}">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Emotion Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/meditation">
+                            <i class="fas fa-spa"></i>
+                            <span>Meditate</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('personal_info') }}">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
                     </li>
                 </ul>
+                <div class="d-flex align-items-center user-section">
+                    {% if session.username %}
+                    <span class="welcome-text">Welcome, {{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-logout">Sign Out</a>
+                    {% else %}
+                    <a class="btn btn-login" href="{{ url_for('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
     <div class="container">
-        <h2 style="color: #2d9cd4; font-weight: bold; margin-bottom: 0.5rem;text-align: center;">Chat with Chikitsa 🤖</h2>
+        <h2 style="color: #2d9cd4; font-weight: bold; margin-bottom: 0.5rem;text-align: center;">Chat with Chikitsa 🤖
+        </h2>
         <p class="subtitle"
             style="color: #666; font-size: 12px;text-align: center;  font-weight: 300; margin-top: 0; font-family: 'Poppins', sans-serif; line-height: 1.4;">
             Your compassionate companion for mental wellness. Share your thoughts in a safe, judgment-free space. 💬
         </p>
         <div class="chat-box" id="chat-box">
-            <!-- Chat messages will be displayed here -->
         </div>
         <div class="textarea">
             <input type="text" id="user_input" placeholder="Type your message... 📝">

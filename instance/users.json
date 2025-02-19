@@ -12,7 +12,9 @@
         "password": "$2b$12$T0UgjAyeGydahArxzHCek.AXoBj9ikV7ZVFqUx6eQ5DFC88SBf0wm",
         "role": "doctor",
         "created_at": "2025-02-11T15:58:09.893521",
-        "created_by": "vinayak@admin.com"
+        "created_by": "vinayak@admin.com",
+        "updated_at": "2025-02-18T12:18:40.806736",
+        "updated_by": "vinayak@admin.com"
     },
     {
         "name": "mishra",

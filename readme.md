@@ -15,6 +15,10 @@
 *"Mind's Power, Tech's Devotion – Strength for All, A True Solution!"*
 </div>
 
+## 📺 Chikitsa Explain Video  
+
+[![Watch the Video](https://img.shields.io/badge/📺-Watch%20Demo-red?style=for-the-badge)](https://youtu.be/JwifGMl2eHc)
+
 ## 📋 Table of Contents
 
 - [Overview](#-overview)

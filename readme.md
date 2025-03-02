@@ -16,8 +16,10 @@
 </div>
 
 ## 📺 Chikitsa Explain Video  
+<div align="center">
 
 [![Watch the Video](https://img.shields.io/badge/📺-Watch%20Demo-red?style=for-the-badge)](https://youtu.be/JwifGMl2eHc)
+</div>
 
 ## 📋 Table of Contents
 

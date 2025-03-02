@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "patient": "Vinayak Shinde",
+        "date": "2025-02-27",
+        "slot": "17:00-18:00",
+        "status": "accepted",
+        "created_at": "2025-02-19T13:01:19.711719",
+        "cancellation_reason": null
+    },
+    {
+        "id": 2,
+        "patient": "Vinayak Shinde",
+        "date": "2025-02-19",
+        "slot": "10:00-11:00",
+        "status": "cancelled",
+        "created_at": "2025-02-19T14:39:26.289451",
+        "cancellation_reason": "bye"
+    },
+    {
+        "id": 3,
+        "patient": "Vinayak Shinde",
+        "date": "2025-02-19",
+        "slot": "17:00-18:00",
+        "status": "cancelled",
+        "created_at": "2025-02-19T14:39:46.893776",
+        "cancellation_reason": "bye\n"
+    },
+    {
+        "id": 4,
+        "patient": "Vinayak Shinde",
+        "date": "2025-02-19",
+        "slot": "12:00-13:00",
+        "status": "cancelled",
+        "created_at": "2025-02-19T14:40:04.806030",
+        "cancellation_reason": "ok"
+    },
+    {
+        "id": 5,
+        "patient": "Vinayak Shinde",
+        "date": "2025-03-03",
+        "slot": "10:00-11:00",
+        "status": "accepted",
+        "created_at": "2025-02-19T14:41:24.967805",
+        "cancellation_reason": null,
+        "meet_link": "https://meet.google.com/iao-drda-vtc"
+    },
+    {
+        "id": 6,
+        "patient": "Vinayak Shinde",
+        "date": "2025-02-20",
+        "slot": "12:00-13:00",
+        "status": "accepted",
+        "created_at": "2025-02-19T15:20:11.502715",
+        "cancellation_reason": null,
+        "meet_link": "https://meet.google.com/iao-drda-vtc"
+    }
+]
